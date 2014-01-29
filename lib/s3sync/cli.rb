@@ -39,6 +39,7 @@ module S3Sync
     class BaseCmd < CmdParse::Command
 
       @has_prefix = false
+      @endpoint = nil
 
       def has_options?
         not options.instance_variables.empty?
@@ -65,7 +66,9 @@ module S3Sync
 
       def execute(args)
         # Connecting to amazon
-        s3 = AWS::S3.new
+        s3 = AWS::S3.new(
+          s3_endpoint: @endpoint
+          )
 
         # From the command line
         key, file = args
@@ -197,6 +200,10 @@ module S3Sync
           opt.on("-d", "--delimiter=D", "Charactere used to separate columns") {|d|
             @delimiter = d
           }
+
+          opt.on("--endpoint=ENDPOINT", "S3 Endpoint") {|v|
+            @endpoint = v
+          }
         end
       end
 
@@ -228,6 +235,12 @@ module S3Sync
         @short_desc = "Delete a key from a bucket"
 
         @has_prefix = 'required'
+
+        self.options = CmdParse::OptionParserWrapper.new do |opt|
+          opt.on("--endpoint=ENDPOINT", "S3 Endpoint") {|v|
+            @endpoint = v
+          }
+        end
       end
 
       def run s3, bucket, key, file, args
@@ -387,6 +400,11 @@ module S3Sync
           opt.on("-v", "--verbose", "Show file names") {
             @verbose = true
           }
+
+          opt.on("--endpoint=ENDPOINT", "S3 Endpoint") {|v|
+            @endpoint = v
+          }
+
         end
       end
 
