@@ -75,14 +75,19 @@ module S3Sync
     attr_accessor :path
     attr_accessor :size
 
-    def initialize base, path, size
+    def initialize base, path, size, hash
       @base = base
       @path = path
-      @size = size
+      @size = size.to_i
+      @hash = hash
     end
 
     def full
       S3Sync.safe_join [@base, @path]
+    end
+
+    def hash
+      @hash
     end
 
     def == other
@@ -100,6 +105,32 @@ module S3Sync
     end
 
     alias eql? ==
+  end
+
+  class LocalNode < Node
+
+    def hash
+      unless @hash
+        multi_part_threshold = AWS.config.s3_multipart_threshold
+        total_size = File.stat(full).size
+        File.open(full, 'rb') do |io|
+          if total_size > multi_part_threshold
+            max_parts = AWS.config.s3_multipart_max_parts
+            min_part_size = AWS.config.s3_multipart_min_part_size
+            part_size = [(total_size.to_f / max_parts).ceil, min_part_size].max.to_i
+            part_size += 16 - (part_size % 16)
+            md5s = []
+            while !io.eof?
+              md5s << Digest::MD5.digest(io.read(part_size))
+            end
+            @hash = Digest::MD5.hexdigest(md5s.join('')) + '-' + md5s.size.to_s
+          else
+            @hash = Digest::MD5.hexdigest(io.read)
+          end
+        end
+      end
+      @hash
+    end
   end
 
   class LocalDirectory
@@ -136,7 +167,7 @@ module S3Sync
 
         # We only need the relative path here
         file_name = file.gsub(/^#{@source}\/?/, '').squeeze('/')
-        node = Node.new(@source.squeeze('/'), file_name, st.size)
+        node = LocalNode.new(@source.squeeze('/'), file_name, st.size, nil)
         nodes[node.path] = node
       end
 
@@ -153,7 +184,7 @@ module S3Sync
         value2 = hash2.delete key
         if value2.nil?
           to_add_to_2 << value
-        elsif value2.size == value.size
+        elsif value2.size == value.size and value2.hash == value.hash
           same << value
         else
           to_add_to_2 << value
@@ -294,10 +325,11 @@ module S3Sync
     def read_tree_remote location
       dir = location.path
       dir += '/' if not dir.empty? and not dir.end_with?('/')
-
       nodes = {}
       @args.s3.buckets[location.bucket].objects.with_prefix(dir || "").to_a.collect do |obj|
-        node = Node.new(location.path, obj.key, obj.content_length)
+        key = obj.key[dir.length .. -1]
+        etag = obj.etag[1 .. -2] # delete quates
+        node = Node.new(location.path, key, obj.content_length, etag)
         nodes[node.path] = node
       end
       return nodes
