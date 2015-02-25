@@ -255,7 +255,7 @@ module S3Sync
     def self.remote_prefix?(prefix)
       # allow for dos-like things e.g. C:\ to be treated as local even with
       # colon.
-      prefix.include? ':' and not prefix.match '^[A-Za-z]:[\\\\/]'
+      prefix.include? ':' and not prefix.match '^[A-Za-z\.]:[\\\\/]'
     end
 
     def self.process_file_destination source, destination, file=""
