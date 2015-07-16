@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
 
   # Library requirements
-  spec.add_dependency "aws-sdk"
+  spec.add_dependency "aws-sdk", "~> 1.0"
   spec.add_dependency "cmdparse", "~> 2.0"
 
   # Development requirements

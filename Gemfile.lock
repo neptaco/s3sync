@@ -2,25 +2,26 @@ PATH
   remote: .
   specs:
     s3sync (2.0.1)
-      aws-sdk
-      cmdparse
+      aws-sdk (~> 1.0)
+      cmdparse (~> 2.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    aws-sdk (1.31.3)
+    aws-sdk (1.64.0)
+      aws-sdk-v1 (= 1.64.0)
+    aws-sdk-v1 (1.64.0)
       json (~> 1.4)
       nokogiri (>= 1.4.4)
-      uuidtools (~> 2.1)
     bump (0.5.0)
-    cmdparse (2.0.5)
+    cmdparse (2.0.6)
     diff-lcs (1.2.5)
     docile (1.1.1)
-    json (1.8.1)
-    mini_portile (0.5.2)
+    json (1.8.3)
+    mini_portile (0.6.2)
     multi_json (1.8.2)
-    nokogiri (1.6.1)
-      mini_portile (~> 0.5.0)
+    nokogiri (1.6.6.2)
+      mini_portile (~> 0.6.0)
     rake (10.1.1)
     rspec (2.14.1)
       rspec-core (~> 2.14.0)
@@ -35,7 +36,6 @@ GEM
       multi_json
       simplecov-html (~> 0.8.0)
     simplecov-html (0.8.0)
-    uuidtools (2.1.4)
 
 PLATFORMS
   ruby
